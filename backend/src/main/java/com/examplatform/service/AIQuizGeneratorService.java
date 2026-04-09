@@ -28,13 +28,11 @@ public class AIQuizGeneratorService {
     
     public List<Map<String, Object>> generateQuiz(String topic, int numberOfQuestions) {
         System.out.println("Starting quiz generation for topic: " + topic + ", questions: " + numberOfQuestions);
-        
-        // Check if API key is configured
+
         if (apiKey == null || apiKey.equals("YOUR_GEMINI_API_KEY") || apiKey.trim().isEmpty()) {
-            System.out.println("Gemini API key not configured. Using mock quiz.");
-            return generateMockQuiz(topic, numberOfQuestions);
+            throw new RuntimeException("Gemini API key is not configured.");
         }
-        
+
         try {
             String prompt = String.format(
                 "Generate %d multiple choice questions about '%s'. " +
@@ -43,57 +41,81 @@ public class AIQuizGeneratorService {
                 "Return ONLY a valid JSON array with this EXACT structure (no markdown, no code blocks, no explanation): " +
                 "[{\"question\":\"What is the capital of France?\",\"options\":[\"Option A: Paris\",\"Option B: London\",\"Option C: Berlin\",\"Option D: Madrid\"],\"correctAnswer\":\"Option A: Paris\"}]. " +
                 "Make sure each option starts with 'Option A:', 'Option B:', 'Option C:', or 'Option D:' followed by the answer text. " +
-                "Generate %d questions following this exact format.", 
+                "Generate exactly %d questions following this exact format.",
                 numberOfQuestions, topic, numberOfQuestions);
-            
+
             String requestBody = objectMapper.writeValueAsString(Map.of(
                 "contents", List.of(Map.of(
                     "parts", List.of(Map.of("text", prompt))
-                ))
+                )),
+                "generationConfig", Map.of(
+                    "temperature", 0.7,
+                    "maxOutputTokens", 4096
+                )
             ));
-            
-            System.out.println("Calling Gemini API...");
-            
+
+            System.out.println("Calling Gemini API at: " + apiUrl);
+
             HttpRequest request = HttpRequest.newBuilder()
                 .uri(URI.create(apiUrl + "?key=" + apiKey))
                 .header("Content-Type", "application/json")
-                .timeout(Duration.ofSeconds(30))
+                .timeout(Duration.ofSeconds(60))
                 .POST(HttpRequest.BodyPublishers.ofString(requestBody))
                 .build();
-            
+
             HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
-            
+
             System.out.println("Gemini API Response Status: " + response.statusCode());
-            
-            if (response.statusCode() == 200) {
-                JsonNode root = objectMapper.readTree(response.body());
-                
-                // Check if response has the expected structure
-                if (!root.has("candidates") || root.path("candidates").isEmpty()) {
-                    System.err.println("Invalid Gemini response structure: " + response.body());
-                    return generateMockQuiz(topic, numberOfQuestions);
-                }
-                
-                String content = root.path("candidates").get(0)
-                    .path("content").path("parts").get(0)
-                    .path("text").asText();
-                
-                System.out.println("Gemini generated content: " + content);
-                
-                // Clean the response - remove markdown code blocks if present
-                content = content.replaceAll("```json\\s*", "").replaceAll("```\\s*", "").trim();
-                
-                List<Map<String, Object>> questions = objectMapper.readValue(content, List.class);
-                System.out.println("Successfully generated " + questions.size() + " questions with Gemini AI");
-                return questions;
-            } else {
-                System.err.println("Gemini API Error (" + response.statusCode() + "): " + response.body());
-                return generateMockQuiz(topic, numberOfQuestions);
+            System.out.println("Gemini API Raw Response: " + response.body());
+
+            if (response.statusCode() != 200) {
+                throw new RuntimeException("Gemini API returned status " + response.statusCode() + ": " + response.body());
             }
+
+            JsonNode root = objectMapper.readTree(response.body());
+
+            if (!root.has("candidates") || root.path("candidates").isEmpty()) {
+                throw new RuntimeException("Gemini response missing candidates: " + response.body());
+            }
+
+            JsonNode candidate = root.path("candidates").get(0);
+            String finishReason = candidate.path("finishReason").asText("");
+            if ("SAFETY".equals(finishReason) || "RECITATION".equals(finishReason)) {
+                throw new RuntimeException("Gemini blocked the response. Reason: " + finishReason);
+            }
+
+            // gemini-2.5-flash returns multiple parts (thinking + text), find the text part
+            String content = "";
+            JsonNode parts = candidate.path("content").path("parts");
+            for (JsonNode part : parts) {
+                if (!part.has("thought") || !part.path("thought").asBoolean()) {
+                    content = part.path("text").asText();
+                    break;
+                }
+            }
+            if (content.isEmpty()) {
+                content = parts.get(0).path("text").asText();
+            }
+            System.out.println("Gemini generated content: " + content);
+
+            // Strip markdown code fences if present
+            content = content.replaceAll("(?s)```json\\s*", "").replaceAll("(?s)```\\s*", "").trim();
+
+            // Extract JSON array if there's surrounding text
+            int start = content.indexOf('[');
+            int end = content.lastIndexOf(']');
+            if (start != -1 && end != -1 && end > start) {
+                content = content.substring(start, end + 1);
+            }
+
+            List<Map<String, Object>> questions = objectMapper.readValue(content, List.class);
+            System.out.println("Successfully generated " + questions.size() + " questions with Gemini AI");
+            return questions;
+
         } catch (Exception e) {
             System.err.println("Error generating quiz with Gemini: " + e.getClass().getName() + " - " + e.getMessage());
             e.printStackTrace();
-            return generateMockQuiz(topic, numberOfQuestions);
+            throw new RuntimeException("Failed to generate quiz using Gemini AI: " + e.getMessage(), e);
         }
     }
     

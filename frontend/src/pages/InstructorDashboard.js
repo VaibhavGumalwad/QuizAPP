@@ -29,13 +29,15 @@ function InstructorDashboard() {
     e.preventDefault();
     setLoading(true);
     try {
-      await instructorService.createQuiz(topic, numberOfQuestions, instructorId);
+      await instructorService.createQuiz(topic, parseInt(numberOfQuestions), instructorId);
       alert('Quiz created successfully!');
       setTopic('');
       setNumberOfQuestions(5);
       loadQuizzes();
     } catch (err) {
-      alert('Failed to create quiz');
+      const msg = err.response?.data?.error || err.response?.data || err.message || 'Unknown error';
+      alert('Failed to create quiz: ' + msg);
+      console.error('Quiz creation error:', err.response?.data || err);
     }
     setLoading(false);
   };

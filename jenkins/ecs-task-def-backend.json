@@ -1,0 +1,45 @@
+{
+  "family": "exam-platform-backend",
+  "networkMode": "awsvpc",
+  "requiresCompatibilities": ["FARGATE"],
+  "cpu": "512",
+  "memory": "1024",
+  "executionRoleArn": "arn:aws:iam::<ACCOUNT_ID>:role/ecsTaskExecutionRole",
+  "taskRoleArn": "arn:aws:iam::<ACCOUNT_ID>:role/ecsTaskRole",
+  "containerDefinitions": [
+    {
+      "name": "exam-platform-backend",
+      "image": "<ACCOUNT_ID>.dkr.ecr.<REGION>.amazonaws.com/exam-platform-backend:<IMAGE_TAG>",
+      "portMappings": [
+        { "containerPort": 8081, "protocol": "tcp" }
+      ],
+      "essential": true,
+      "environment": [
+        { "name": "SPRING_PROFILES_ACTIVE", "value": "production" }
+      ],
+      "secrets": [
+        { "name": "SPRING_DATASOURCE_URL",      "valueFrom": "arn:aws:secretsmanager:<REGION>:<ACCOUNT_ID>:secret:exam-platform/db-url" },
+        { "name": "SPRING_DATASOURCE_USERNAME", "valueFrom": "arn:aws:secretsmanager:<REGION>:<ACCOUNT_ID>:secret:exam-platform/db-username" },
+        { "name": "SPRING_DATASOURCE_PASSWORD", "valueFrom": "arn:aws:secretsmanager:<REGION>:<ACCOUNT_ID>:secret:exam-platform/db-password" },
+        { "name": "JWT_SECRET",                 "valueFrom": "arn:aws:secretsmanager:<REGION>:<ACCOUNT_ID>:secret:exam-platform/jwt-secret" },
+        { "name": "GEMINI_API_KEY",             "valueFrom": "arn:aws:secretsmanager:<REGION>:<ACCOUNT_ID>:secret:exam-platform/gemini-api-key" }
+      ],
+      "logConfiguration": {
+        "logDriver": "awslogs",
+        "options": {
+          "awslogs-group": "/ecs/exam-platform-backend",
+          "awslogs-region": "<REGION>",
+          "awslogs-stream-prefix": "ecs",
+          "awslogs-create-group": "true"
+        }
+      },
+      "healthCheck": {
+        "command": ["CMD-SHELL", "curl -f http://localhost:8081/actuator/health || exit 1"],
+        "interval": 30,
+        "timeout": 5,
+        "retries": 3,
+        "startPeriod": 60
+      }
+    }
+  ]
+}
