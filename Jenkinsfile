@@ -1,4 +1,4 @@
-ipeline {
+line {
     agent any
 
     parameters {
