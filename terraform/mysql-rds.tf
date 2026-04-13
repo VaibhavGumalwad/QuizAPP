@@ -45,8 +45,8 @@ resource "aws_db_instance" "mysql" {
   storage_encrypted     = true
   
   db_name  = "exam_platform"
-  username = "root"
-  password = "Vaibhav@2003"
+  username = "admindb"
+  password = "Vaibhav2003"
   
   vpc_security_group_ids = [aws_security_group.mysql.id]
   db_subnet_group_name   = aws_db_subnet_group.mysql.name
