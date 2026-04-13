@@ -7,7 +7,7 @@ data:
   application.properties: |
     spring.application.name=exam-platform
     server.port=8081
-    spring.datasource.url=jdbc:mysql://exam-platform-eks-mysql.cwz2gqgyw030.us-east-1.rds.amazonaws.com:3306/exam_platform?createDatabaseIfNotExist=true
+    spring.datasource.url=jdbc:mysql://exam-platform-eks-mysql.cvo22qwo2735.us-east-1.rds.amazonaws.com:3306/exam_platform?createDatabaseIfNotExist=true
     spring.jpa.hibernate.ddl-auto=update
     spring.jpa.show-sql=false
     spring.jpa.properties.hibernate.dialect=org.hibernate.dialect.MySQLDialect

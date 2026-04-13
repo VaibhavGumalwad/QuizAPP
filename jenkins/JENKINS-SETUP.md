@@ -37,7 +37,7 @@ Go to **Manage Jenkins → Credentials → System → Global credentials (unrest
 | Credential ID    | Type                 | Value                          |
 |------------------|----------------------|--------------------------------|
 | `aws-credentials`| AWS Credentials      | IAM Access Key + Secret Key    |
-| `aws-account-id` | Secret Text          | Your 12-digit AWS Account ID   |
+| `aws-account-id` | Secret Text          | `533266983796`                 |
 
 ---
 
@@ -135,7 +135,7 @@ Add under `mapUsers` (for IAM user) or `mapRoles` (for IAM role):
 
 ```yaml
 mapUsers: |
-  - userarn: arn:aws:iam::<ACCOUNT_ID>:user/jenkins
+  - userarn: arn:aws:iam::533266983796:user/jenkins
     username: jenkins
     groups:
       - system:masters
