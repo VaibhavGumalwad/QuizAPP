@@ -14,7 +14,7 @@ pipeline {
         FRONTEND_REPO   = 'exam-platform-frontend'
         EKS_CLUSTER     = 'exam-platform-eks'
         K8S_NAMESPACE   = 'exam-platform'
-        DOCKER_BUILDKIT = '1'
+        DOCKER_BUILDKIT = '0'
     }
 
     options {
