@@ -232,10 +232,10 @@ pipeline {
     post {
         always {
             script {
-                sh """
-                    docker rmi ${env.ECR_REGISTRY}/${env.BACKEND_REPO}:${env.BUILD_TAG}  || true
-                    docker rmi ${env.ECR_REGISTRY}/${env.FRONTEND_REPO}:${env.BUILD_TAG} || true
-                """
+                sh '''
+                    docker rmi $ECR_REGISTRY/$BACKEND_REPO:$BUILD_TAG  || true
+                    docker rmi $ECR_REGISTRY/$FRONTEND_REPO:$BUILD_TAG || true
+                '''
             }
             cleanWs()
         }
