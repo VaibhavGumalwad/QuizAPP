@@ -17,14 +17,14 @@ spec:
     spec:
       containers:
       - name: backend
-        image: <your-account-id>.dkr.ecr.us-east-1.amazonaws.com/exam-platform-backend:latest
+        image: 761204575501.dkr.ecr.us-east-1.amazonaws.com/exam-platform-backend:latest
         ports:
         - containerPort: 8081
         env:
         - name: SPRING_PROFILES_ACTIVE
           value: "production"
         - name: SPRING_DATASOURCE_URL
-          value: "jdbc:mysql://<rds-endpoint>:3306/exam_platform?createDatabaseIfNotExist=true"
+          value: "jdbc:mysql://exam-platform-eks-mysql.cwz2gqgyw030.us-east-1.rds.amazonaws.com:3306/exam_platform?createDatabaseIfNotExist=true"
         - name: SPRING_DATASOURCE_USERNAME
           valueFrom:
             secretKeyRef:

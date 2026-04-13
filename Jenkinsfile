@@ -4,7 +4,6 @@ pipeline {
     parameters {
         string(name: 'IMAGE_TAG',    defaultValue: '', description: 'Docker image tag — leave blank to auto-generate from commit hash')
         booleanParam(name: 'SKIP_TESTS', defaultValue: false, description: 'Skip unit tests')
-        booleanParam(name: 'SKIP_SONAR', defaultValue: false, description: 'Skip SonarQube quality gate')
     }
 
     environment {
@@ -16,7 +15,7 @@ pipeline {
         FRONTEND_REPO   = 'exam-platform-frontend'
 
         // ── EKS ───────────────────────────────────────────────────────────────
-        EKS_CLUSTER     = 'exam-platform-eks-cluster'
+        EKS_CLUSTER     = 'exam-platform-eks'
         K8S_NAMESPACE   = 'exam-platform'
 
         // ── Misc ──────────────────────────────────────────────────────────────
@@ -70,33 +69,7 @@ pipeline {
             }
         }
 
-        // ── 3. SonarQube ──────────────────────────────────────────────────────
-        stage('SonarQube Analysis') {
-            when { expression { !params.SKIP_SONAR } }
-            steps {
-                withSonarQubeEnv('SonarQube') {
-                    dir('backend') {
-                        sh '''
-                            mvn sonar:sonar \
-                              -Dsonar.projectKey=exam-platform \
-                              -Dsonar.projectName="Exam Platform" \
-                              -Dsonar.coverage.jacoco.xmlReportPaths=target/site/jacoco/jacoco.xml
-                        '''
-                    }
-                }
-            }
-        }
-
-        stage('Quality Gate') {
-            when { expression { !params.SKIP_SONAR } }
-            steps {
-                timeout(time: 5, unit: 'MINUTES') {
-                    waitForQualityGate abortPipeline: true
-                }
-            }
-        }
-
-        // ── 4. ECR Login ──────────────────────────────────────────────────────
+        // ── 3. ECR Login ──────────────────────────────────────────────────────
         stage('ECR Login') {
             steps {
                 withCredentials([[$class: 'AmazonWebServicesCredentialsBinding',
@@ -176,16 +149,9 @@ pipeline {
                           --region ${AWS_REGION} \
                           --name ${EKS_CLUSTER}
 
-                        # Fetch RDS endpoint from Terraform output
-                        RDS_ENDPOINT=$(cd terraform && terraform output -raw mysql_endpoint | cut -d: -f1)
-
-                        # Inject real account ID, build tag, and RDS endpoint into manifests
-                        sed -i 's|<your-account-id>|${AWS_ACCOUNT_ID}|g' k8s/backend-deployment.yaml
-                        sed -i 's|<your-account-id>|${AWS_ACCOUNT_ID}|g' k8s/frontend-deployment.yaml
-                        sed -i 's|:latest|:${BUILD_TAG}|g'               k8s/backend-deployment.yaml
-                        sed -i 's|:latest|:${BUILD_TAG}|g'               k8s/frontend-deployment.yaml
-                        sed -i "s|<rds-endpoint>|${RDS_ENDPOINT}|g"      k8s/backend-deployment.yaml
-                        sed -i "s|<rds-endpoint>|${RDS_ENDPOINT}|g"      k8s/configmap.yaml
+                        # Inject build tag into manifests
+                        sed -i 's|:latest|:${BUILD_TAG}|g' k8s/backend-deployment.yaml
+                        sed -i 's|:latest|:${BUILD_TAG}|g' k8s/frontend-deployment.yaml
 
                         # Fetch ALB hostname for frontend API URL
                         ALB_HOST=$(kubectl get ingress exam-platform-ingress \

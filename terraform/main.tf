@@ -12,12 +12,13 @@ terraform {
 provider "aws" {
   region = "us-east-1"
   
+  
 }
 
 # Local values
 locals {
   cluster_name = "exam-platform-eks"
-  kubernetes_version = "1.29"
+  kubernetes_version = "1.30"
   vpc_cidr = "10.0.0.0/16"
   node_instance_types = ["t3.medium"]
   node_capacity_type = "ON_DEMAND"
