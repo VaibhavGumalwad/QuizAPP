@@ -57,7 +57,7 @@ pipeline {
                 stage('Frontend') {
                     steps {
                         dir('frontend') {
-                            sh 'npm ci && npm test -- --watchAll=false --passWithNoTests'
+                            sh 'npm ci --legacy-peer-deps && npm test -- --watchAll=false --passWithNoTests'
                         }
                     }
                 }
