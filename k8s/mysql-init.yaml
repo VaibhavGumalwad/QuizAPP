@@ -1,45 +1,41 @@
-apiVersion: v1
-kind: ConfigMap
-metadata:
-  name: mysql-init
-  namespace: exam-platform
-data:
-  init.sql: |
-    CREATE DATABASE IF NOT EXISTS exam_platform;
-    USE exam_platform;
-    
-    -- Create users table
-    CREATE TABLE IF NOT EXISTS users (
-        id BIGINT AUTO_INCREMENT PRIMARY KEY,
-        username VARCHAR(50) UNIQUE NOT NULL,
-        password VARCHAR(255) NOT NULL,
-        email VARCHAR(100) UNIQUE NOT NULL,
-        role ENUM('ADMIN', 'INSTRUCTOR', 'STUDENT') NOT NULL,
-        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
-    );
-    
-    -- Create knowledge_documents table
-    CREATE TABLE IF NOT EXISTS knowledge_documents (
-        id BIGINT AUTO_INCREMENT PRIMARY KEY,
-        title VARCHAR(255) NOT NULL,
-        content TEXT NOT NULL,
-        topic VARCHAR(100) NOT NULL,
-        difficulty_level ENUM('BEGINNER', 'INTERMEDIATE', 'ADVANCED') NOT NULL,
-        document_type ENUM('TUTORIAL', 'REFERENCE', 'EXAMPLE') NOT NULL,
-        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
-    );
-    
-    -- Insert sample admin user (password: admin123)
-    INSERT IGNORE INTO users (username, password, email, role) VALUES 
-    ('admin', '$2a$10$N.zmdr9k7uOCQb376NoUnuTJ8iAt6Z5EHsM8lE9lBOsl7iKTVEFDa', 'admin@examplatform.com', 'ADMIN');
-    
-    -- Insert sample knowledge documents
-    INSERT IGNORE INTO knowledge_documents (title, content, topic, difficulty_level, document_type) VALUES 
-    ('Java Basics', 'Java is a programming language and computing platform first released by Sun Microsystems in 1995.', 'Java', 'BEGINNER', 'TUTORIAL'),
-    ('Spring Boot Introduction', 'Spring Boot makes it easy to create stand-alone, production-grade Spring based Applications.', 'Spring', 'INTERMEDIATE', 'TUTORIAL'),
-    ('React Fundamentals', 'React is a JavaScript library for building user interfaces, particularly web applications.', 'React', 'BEGINNER', 'TUTORIAL');
-    
-    GRANT ALL PRIVILEGES ON exam_platform.* TO 'examuser'@'%';
-    FLUSH PRIVILEGES;
+# MySQL init ConfigMap is no longer needed.
+# Schema is managed by Hibernate (spring.jpa.hibernate.ddl-auto=update) against AWS RDS.
+# To seed initial data, run the SQL from this file manually against the RDS endpoint once:
+#   mysql -h <rds-endpoint> -u root -p exam_platform < init.sql
+#
+# Original init SQL preserved below for reference:
+#
+# CREATE DATABASE IF NOT EXISTS exam_platform;
+# USE exam_platform;
+#
+# CREATE TABLE IF NOT EXISTS users (
+#     id BIGINT AUTO_INCREMENT PRIMARY KEY,
+#     username VARCHAR(50) UNIQUE NOT NULL,
+#     password VARCHAR(255) NOT NULL,
+#     email VARCHAR(100) UNIQUE NOT NULL,
+#     role ENUM('ADMIN', 'INSTRUCTOR', 'STUDENT') NOT NULL,
+#     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+#     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+# );
+#
+# CREATE TABLE IF NOT EXISTS knowledge_documents (
+#     id BIGINT AUTO_INCREMENT PRIMARY KEY,
+#     title VARCHAR(255) NOT NULL,
+#     content TEXT NOT NULL,
+#     topic VARCHAR(100) NOT NULL,
+#     difficulty_level ENUM('BEGINNER', 'INTERMEDIATE', 'ADVANCED') NOT NULL,
+#     document_type ENUM('TUTORIAL', 'REFERENCE', 'EXAMPLE') NOT NULL,
+#     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+#     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+# );
+#
+# INSERT IGNORE INTO users (username, password, email, role) VALUES
+# ('admin', '$2a$10$N.zmdr9k7uOCQb376NoUnuTJ8iAt6Z5EHsM8lE9lBOsl7iKTVEFDa', 'admin@examplatform.com', 'ADMIN');
+#
+# INSERT IGNORE INTO knowledge_documents (title, content, topic, difficulty_level, document_type) VALUES
+# ('Java Basics', 'Java is a programming language...', 'Java', 'BEGINNER', 'TUTORIAL'),
+# ('Spring Boot Introduction', 'Spring Boot makes it easy...', 'Spring', 'INTERMEDIATE', 'TUTORIAL'),
+# ('React Fundamentals', 'React is a JavaScript library...', 'React', 'BEGINNER', 'TUTORIAL');
+#
+# GRANT ALL PRIVILEGES ON exam_platform.* TO 'examuser'@'%';
+# FLUSH PRIVILEGES;

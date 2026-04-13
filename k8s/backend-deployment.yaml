@@ -24,7 +24,7 @@ spec:
         - name: SPRING_PROFILES_ACTIVE
           value: "production"
         - name: SPRING_DATASOURCE_URL
-          value: "jdbc:mysql://mysql-service:3306/exam_platform?createDatabaseIfNotExist=true"
+          value: "jdbc:mysql://<rds-endpoint>:3306/exam_platform?createDatabaseIfNotExist=true"
         - name: SPRING_DATASOURCE_USERNAME
           valueFrom:
             secretKeyRef:

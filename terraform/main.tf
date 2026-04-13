@@ -339,3 +339,30 @@ resource "aws_eks_addon" "kube_proxy" {
   addon_name   = "kube-proxy"
   resolve_conflicts = "OVERWRITE"
 }
+
+# ECR Repositories
+resource "aws_ecr_repository" "backend" {
+  name                 = "exam-platform-backend"
+  image_tag_mutability = "MUTABLE"
+
+  image_scanning_configuration {
+    scan_on_push = true
+  }
+}
+
+resource "aws_ecr_repository" "frontend" {
+  name                 = "exam-platform-frontend"
+  image_tag_mutability = "MUTABLE"
+
+  image_scanning_configuration {
+    scan_on_push = true
+  }
+}
+
+output "ecr_backend_url" {
+  value = aws_ecr_repository.backend.repository_url
+}
+
+output "ecr_frontend_url" {
+  value = aws_ecr_repository.frontend.repository_url
+}

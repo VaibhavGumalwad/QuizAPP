@@ -171,17 +171,29 @@ pipeline {
                           --region ${AWS_REGION} \
                           --name ${EKS_CLUSTER}
 
-                        # Inject real account ID and build tag into manifests
+                        # Fetch RDS endpoint from Terraform output
+                        RDS_ENDPOINT=$(cd terraform && terraform output -raw mysql_endpoint | cut -d: -f1)
+
+                        # Inject real account ID, build tag, and RDS endpoint into manifests
                         sed -i 's|<your-account-id>|${AWS_ACCOUNT_ID}|g' k8s/backend-deployment.yaml
                         sed -i 's|<your-account-id>|${AWS_ACCOUNT_ID}|g' k8s/frontend-deployment.yaml
                         sed -i 's|:latest|:${BUILD_TAG}|g'               k8s/backend-deployment.yaml
                         sed -i 's|:latest|:${BUILD_TAG}|g'               k8s/frontend-deployment.yaml
+                        sed -i "s|<rds-endpoint>|${RDS_ENDPOINT}|g"      k8s/backend-deployment.yaml
+                        sed -i "s|<rds-endpoint>|${RDS_ENDPOINT}|g"      k8s/configmap.yaml
+
+                        # Fetch ALB hostname for frontend API URL
+                        ALB_HOST=$(kubectl get ingress exam-platform-ingress \
+                          -n ${K8S_NAMESPACE} \
+                          -o jsonpath='{.status.loadBalancer.ingress[0].hostname}' 2>/dev/null || echo "")
+                        if [ -n "$ALB_HOST" ]; then
+                          sed -i "s|http://backend-service:8081/api|http://${ALB_HOST}/api|g" k8s/frontend-deployment.yaml
+                        fi
 
                         # Apply manifests in dependency order
                         kubectl apply -f k8s/namespace.yaml
                         kubectl apply -f k8s/configmap.yaml
                         kubectl apply -f k8s/secrets.yaml
-                        kubectl apply -f k8s/mysql-deployment.yaml
                         kubectl apply -f k8s/backend-deployment.yaml
                         kubectl apply -f k8s/frontend-deployment.yaml
                         kubectl apply -f k8s/ingress.yaml
