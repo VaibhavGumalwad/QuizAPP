@@ -150,8 +150,8 @@ pipeline {
                           --name ${EKS_CLUSTER}
 
                         # Inject build tag into manifests
-                        sed -i 's|:latest|:${BUILD_TAG}|g' k8s/backend-deployment.yaml
-                        sed -i 's|:latest|:${BUILD_TAG}|g' k8s/frontend-deployment.yaml
+                        sed -i "s|:latest|:${BUILD_TAG}|g" k8s/backend-deployment.yaml
+                        sed -i "s|:latest|:${BUILD_TAG}|g" k8s/frontend-deployment.yaml
 
                         # Fetch ALB hostname for frontend API URL
                         ALB_HOST=$(kubectl get ingress exam-platform-ingress \
