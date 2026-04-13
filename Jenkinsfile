@@ -163,8 +163,13 @@ pipeline {
         // ── 7. Deploy to EKS ──────────────────────────────────────────────────
         stage('Deploy to EKS') {
             steps {
-                withCredentials([[$class: 'AmazonWebServicesCredentialsBinding',
-                                  credentialsId: 'aws-credentials']]) {
+                withCredentials([
+                    [$class: 'AmazonWebServicesCredentialsBinding', credentialsId: 'aws-credentials'],
+                    string(credentialsId: 'rds-username',   variable: 'RDS_USERNAME'),
+                    string(credentialsId: 'rds-password',   variable: 'RDS_PASSWORD'),
+                    string(credentialsId: 'jwt-secret',     variable: 'JWT_SECRET_VAL'),
+                    string(credentialsId: 'gemini-api-key', variable: 'GEMINI_KEY')
+                ]) {
                     sh """
                         # Configure kubectl for the EKS cluster
                         aws eks update-kubeconfig \
@@ -193,7 +198,20 @@ pipeline {
                         # Apply manifests in dependency order
                         kubectl apply -f k8s/namespace.yaml
                         kubectl apply -f k8s/configmap.yaml
-                        kubectl apply -f k8s/secrets.yaml
+
+                        # Create secrets from Jenkins credentials (never stored in git)
+                        kubectl create secret generic mysql-secret \
+                          --namespace ${K8S_NAMESPACE} \
+                          --from-literal=username=${RDS_USERNAME} \
+                          --from-literal=password=${RDS_PASSWORD} \
+                          --save-config --dry-run=client -o yaml | kubectl apply -f -
+
+                        kubectl create secret generic app-secret \
+                          --namespace ${K8S_NAMESPACE} \
+                          --from-literal=jwt-secret=${JWT_SECRET_VAL} \
+                          --from-literal=gemini-api-key=${GEMINI_KEY} \
+                          --save-config --dry-run=client -o yaml | kubectl apply -f -
+
                         kubectl apply -f k8s/backend-deployment.yaml
                         kubectl apply -f k8s/frontend-deployment.yaml
                         kubectl apply -f k8s/ingress.yaml

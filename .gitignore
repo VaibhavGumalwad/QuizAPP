@@ -58,10 +58,10 @@ aws-exports.js
 
 # Kubernetes
 *.kubeconfig
+k8s/secrets.yaml
 
-# Secrets (just in case)
+# Secrets (never commit)
 *secret*
 *password*
 *key*
 !**/src/**
-!k8s/**

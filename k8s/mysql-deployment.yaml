@@ -1,3 +1,0 @@
-# MySQL in-cluster deployment is replaced by AWS RDS MySQL.
-# The RDS instance is provisioned via terraform/mysql-rds.tf.
-# No in-cluster MySQL pod or PVC is needed.
