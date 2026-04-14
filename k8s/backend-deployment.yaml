@@ -45,6 +45,9 @@ spec:
             secretKeyRef:
               name: app-secret
               key: gemini-api-key
+        volumeMounts:
+        - name: config-volume
+          mountPath: /app/config
         resources:
           requests:
             memory: "512Mi"
@@ -62,8 +65,13 @@ spec:
           httpGet:
             path: /actuator/health
             port: 8081
-          initialDelaySeconds: 30
+          initialDelaySeconds: 60
           periodSeconds: 10
+          failureThreshold: 5
+      volumes:
+      - name: config-volume
+        configMap:
+          name: app-config
 ---
 apiVersion: v1
 kind: Service
