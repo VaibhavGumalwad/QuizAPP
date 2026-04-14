@@ -186,8 +186,8 @@ pipeline {
                             kubectl apply -f k8s/hpa.yaml
 
                             # Wait for rollouts to complete
-                            kubectl rollout status deployment/backend-deployment  -n ${env.K8S_NAMESPACE} --timeout=300s
-                            kubectl rollout status deployment/frontend-deployment -n ${env.K8S_NAMESPACE} --timeout=300s
+                            kubectl rollout status deployment/backend-deployment  -n ${env.K8S_NAMESPACE} --timeout=600s
+                            kubectl rollout status deployment/frontend-deployment -n ${env.K8S_NAMESPACE} --timeout=600s
                         """
                     }
                 }
