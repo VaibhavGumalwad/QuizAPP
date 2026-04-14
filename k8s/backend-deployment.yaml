@@ -47,7 +47,8 @@ spec:
               key: gemini-api-key
         volumeMounts:
         - name: config-volume
-          mountPath: /app/config
+          mountPath: /app/config/application.properties
+          subPath: application.properties
         resources:
           requests:
             memory: "512Mi"

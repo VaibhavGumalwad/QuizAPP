@@ -20,9 +20,6 @@ spec:
         image: 065527012058.dkr.ecr.us-east-1.amazonaws.com/exam-platform-frontend:latest
         ports:
         - containerPort: 80
-        env:
-        - name: REACT_APP_API_URL
-          value: "http://backend-service:8081/api"
         resources:
           requests:
             memory: "128Mi"
@@ -55,4 +52,4 @@ spec:
     - protocol: TCP
       port: 80
       targetPort: 80
-  type: LoadBalancer
+  type: ClusterIP
